@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+ 
+    <meta charset="utf-8">
+    <title>Politische Landschaft</title>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+   <script src="d3\d3.js"></script>
+  
+  <link href="https://fonts.googleapis.com/css?family=Pacifico" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css?family=Doppio+One" rel="stylesheet">
+ <style>
+ 
+ 
+ body {
+ font-family: 'Doppio One', sans-serif;
+    background-color: black;
+}
+ 
+.links line {
+  stroke: #999;
+}
+ 
+.nodes circle {
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+ 
+div.tooltip {	
+font: 12px sans-serif;	
+    position: absolute;			
+    text-align: center;			
+   					
+  
+    background: lightsteelblue;	
+    border-style: solid;
+    border-width: 1px;
+	border-color: grey;
+    border-radius: 3px;			
+    pointer-events: none;			
+}
+
+
+.textLabel {
+ pointer-events: none;
+ }
+
+	  </style>
+  </head>
+  <body>
+ 
+
+    <script>
+console.log("boo");
+	var minRadius = 4;
+var maxRadius = 8;
+var w = 1200;
+var h = 600;
+var svg = d3.select("body").append("svg")
+	.attr("width", w)
+	.attr("height", h);
+var div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);	
+var nodesData;
+var linksData;
+var bounceDistanceFactor = 1.3; // Increase min-node Distane by factor x
+
+//Declare Scales
+//Scale for bars:
+
+var barScale = d3.scaleLinear()
+	.domain([0, 38])
+	.range([0,200]);
+var rScale;
+
+nodesData = [
+{"id" : "	1	", "partei": "	CDU/CSU	", "short": "	CDU/CSU	", "a": "	38	", "b": "	21	", "c": "	9	", "d": "	15	", "e": "	20	", "f": "	16	", "g": "	12	", "h": "	13	", "i": "	23	", "j": "	11	", "k": "	15	", "l": "	13	"},
+{"id" : "	2	", "partei": "	SDP	", "short": "	SDP	", "a": "	21	", "b": "	38	", "c": "	20	", "d": "	23	", "e": "	17	", "f": "	13	", "g": "	19	", "h": "	15	", "i": "	23	", "j": "	19	", "k": "	22	", "l": "	17	"},
+{"id" : "	3	", "partei": "	Linke	", "short": "	Linke	", "a": "	9	", "b": "	20	", "c": "	38	", "d": "	30	", "e": "	12	", "f": "	10	", "g": "	30	", "h": "	14	", "i": "	16	", "j": "	26	", "k": "	25	", "l": "	30	"},
+{"id" : "	4	", "partei": "	Grünen	", "short": "	Grüne	", "a": "	15	", "b": "	23	", "c": "	30	", "d": "	38	", "e": "	13	", "f": "	12	", "g": "	26	", "h": "	13	", "i": "	19	", "j": "	24	", "k": "	24	", "l": "	25	"},
+{"id" : "	5	", "partei": "	FDP	", "short": "	FDP	", "a": "	20	", "b": "	17	", "c": "	12	", "d": "	13	", "e": "	38	", "f": "	22	", "g": "	18	", "h": "	10	", "i": "	23	", "j": "	10	", "k": "	20	", "l": "	17	"},
+{"id" : "	6	", "partei": "	AFD	", "short": "	AFD	", "a": "	16	", "b": "	13	", "c": "	10	", "d": "	12	", "e": "	22	", "f": "	38	", "g": "	14	", "h": "	21	", "i": "	21	", "j": "	10	", "k": "	17	", "l": "	12	"},
+{"id" : "	7	", "partei": "	Piraten	", "short": "	Piraten	", "a": "	12	", "b": "	19	", "c": "	30	", "d": "	26	", "e": "	18	", "f": "	14	", "g": "	38	", "h": "	13	", "i": "	19	", "j": "	27	", "k": "	25	", "l": "	29	"},
+{"id" : "	8	", "partei": "	NPD	", "short": "	NPD	", "a": "	13	", "b": "	15	", "c": "	14	", "d": "	13	", "e": "	10	", "f": "	21	", "g": "	13	", "h": "	38	", "i": "	18	", "j": "	9	", "k": "	19	", "l": "	15	"},
+{"id" : "	9	", "partei": "	Freie Wähler", "short": "	F. Wähler	", "a": "	23	", "b": "	23	", "c": "	16	", "d": "	19	", "e": "	23	", "f": "	21	", "g": "	19	", "h": "	18	", "i": "	38	", "j": "	17	", "k": "	22	", "l": "	19	"},
+{"id" : "	10	", "partei": "	Tierschutzpartei", "short": "	Tiersch.	", "a": "	11	", "b": "	19	", "c": "	26	", "d": "	24	", "e": "	10	", "f": "	10	", "g": "	27	", "h": "	9	", "i": "	17	", "j": "	38	", "k": "	22	", "l": "	27	"},
+{"id" : "	11	", "partei": "	ÖDP	", "short": "	ÖDP	", "a": "	15	", "b": "	22	", "c": "	25	", "d": "	24	", "e": "	20	", "f": "	17	", "g": "	25	", "h": "	19	", "i": "	22	", "j": "	22	", "k": "	38	", "l": "	26	"},
+{"id" : "	12	", "partei": "	Die Partei	", "short": "	Die Partei	", "a": "	13	", "b": "	17	", "c": "	30	", "d": "	25	", "e": "	17	", "f": "	12	", "g": "	29	", "h": "	15	", "i": "	19	", "j": "	27	", "k": "	26	", "l": "	38	"}
+
+];
+
+
+
+linksData = [
+{"source": "	1	", "target":"	2	", "weight":"	21	"},
+{"source": "	1	", "target":"	3	", "weight":"	9	"},
+{"source": "	1	", "target":"	4	", "weight":"	15	"},
+{"source": "	1	", "target":"	5	", "weight":"	20	"},
+{"source": "	1	", "target":"	6	", "weight":"	16	"},
+{"source": "	1	", "target":"	7	", "weight":"	12	"},
+{"source": "	1	", "target":"	8	", "weight":"	13	"},
+{"source": "	1	", "target":"	9	", "weight":"	23	"},
+{"source": "	1	", "target":"	10	", "weight":"	11	"},
+{"source": "	1	", "target":"	11	", "weight":"	15	"},
+{"source": "	1	", "target":"	12	", "weight":"	13	"},
+{"source": "	2	", "target":"	3	", "weight":"	20	"},
+{"source": "	2	", "target":"	4	", "weight":"	23	"},
+{"source": "	2	", "target":"	5	", "weight":"	17	"},
+{"source": "	2	", "target":"	6	", "weight":"	13	"},
+{"source": "	2	", "target":"	7	", "weight":"	19	"},
+{"source": "	2	", "target":"	8	", "weight":"	15	"},
+{"source": "	2	", "target":"	9	", "weight":"	23	"},
+{"source": "	2	", "target":"	10	", "weight":"	19	"},
+{"source": "	2	", "target":"	11	", "weight":"	22	"},
+{"source": "	2	", "target":"	12	", "weight":"	17	"},
+{"source": "	3	", "target":"	4	", "weight":"	30	"},
+{"source": "	3	", "target":"	5	", "weight":"	12	"},
+{"source": "	3	", "target":"	6	", "weight":"	10	"},
+{"source": "	3	", "target":"	7	", "weight":"	30	"},
+{"source": "	3	", "target":"	8	", "weight":"	14	"},
+{"source": "	3	", "target":"	9	", "weight":"	16	"},
+{"source": "	3	", "target":"	10	", "weight":"	26	"},
+{"source": "	3	", "target":"	11	", "weight":"	25	"},
+{"source": "	3	", "target":"	12	", "weight":"	30	"},
+{"source": "	4	", "target":"	5	", "weight":"	13	"},
+{"source": "	4	", "target":"	6	", "weight":"	12	"},
+{"source": "	4	", "target":"	7	", "weight":"	26	"},
+{"source": "	4	", "target":"	8	", "weight":"	13	"},
+{"source": "	4	", "target":"	9	", "weight":"	19	"},
+{"source": "	4	", "target":"	10	", "weight":"	24	"},
+{"source": "	4	", "target":"	11	", "weight":"	24	"},
+{"source": "	4	", "target":"	12	", "weight":"	25	"},
+{"source": "	5	", "target":"	6	", "weight":"	22	"},
+{"source": "	5	", "target":"	7	", "weight":"	18	"},
+{"source": "	5	", "target":"	8	", "weight":"	10	"},
+{"source": "	5	", "target":"	9	", "weight":"	23	"},
+{"source": "	5	", "target":"	10	", "weight":"	10	"},
+{"source": "	5	", "target":"	11	", "weight":"	20	"},
+{"source": "	5	", "target":"	12	", "weight":"	17	"},
+{"source": "	6	", "target":"	7	", "weight":"	14	"},
+{"source": "	6	", "target":"	8	", "weight":"	21	"},
+{"source": "	6	", "target":"	9	", "weight":"	21	"},
+{"source": "	6	", "target":"	10	", "weight":"	10	"},
+{"source": "	6	", "target":"	11	", "weight":"	17	"},
+{"source": "	6	", "target":"	12	", "weight":"	12	"},
+{"source": "	7	", "target":"	8	", "weight":"	13	"},
+{"source": "	7	", "target":"	9	", "weight":"	19	"},
+{"source": "	7	", "target":"	10	", "weight":"	27	"},
+{"source": "	7	", "target":"	11	", "weight":"	25	"},
+{"source": "	7	", "target":"	12	", "weight":"	29	"},
+{"source": "	8	", "target":"	9	", "weight":"	18	"},
+{"source": "	8	", "target":"	10	", "weight":"	9	"},
+{"source": "	8	", "target":"	11	", "weight":"	19	"},
+{"source": "	8	", "target":"	12	", "weight":"	15	"},
+{"source": "	9	", "target":"	10	", "weight":"	17	"},
+{"source": "	9	", "target":"	11	", "weight":"	22	"},
+{"source": "	9	", "target":"	12	", "weight":"	19	"},
+{"source": "	10	", "target":"	11	", "weight":"	22	"},
+{"source": "	10	", "target":"	12	", "weight":"	27	"},
+{"source": "	11	", "target":"	12	", "weight":"	26	"}
+
+];
+
+
+//Create Scale for weights
+weightScale = d3.scaleLinear()
+	.domain([d3.min(linksData,function(d) { return +d.weight;} ), d3.max(linksData,function(d) { return +d.weight;} )])
+	.range([0,1]);
+	//Min and Max of Scales for testing
+	console.log(d3.min(linksData,function(d) { return +d.weight;} ));
+	console.log(d3.max(linksData,function(d) { return +d.weight;} ));
+
+console.log("go");
+
+loadSimulation();
+
+
+
+
+function loadSimulation(){	
+
+ var simulation  = d3.forceSimulation()
+					.nodes(nodesData);
+
+simulation
+	.force("charge_force", d3.forceManyBody().strength(-9000))
+	//.force("y", d3.forceY(h/2).strength(0.05))
+	.force("center_force", d3.forceCenter(w/2, h*(6/10)))
+	.force("no_bounce", d3.forceCollide(function(d){return 10;}))// enter radius
+	.force("link", d3.forceLink(linksData).id(function(d){return d.id;}).strength(function(d){return weightScale(d.weight);})); ; 
+
+simulation.on("tick", tickActions);
+
+
+// draw Lines	
+
+var link = svg.append("g")
+	.attr("class", "links")
+	.selectAll("line")
+	.data(linksData)
+	.enter()
+	.append("line")
+	.attr("stroke-width", 3)
+	.attr("opacity", function(d){return weightScale(d.weight);})
+	.style("stroke", "white");
+
+// draw circles
+
+var node = svg.append("g")
+	.attr("class", "nodes")
+	.selectAll("circle")
+	.data(nodesData)
+	.enter()
+	.append("circle")
+	.attr("opacity", 0.75)
+	.attr("r",function(d){
+		return 23; //change radius
+
+	})
+	.attr("fill", function(d){return "red";})
+	.on("mouseover", function(d){
+	d3.select(this).attr("opacity", "1");
+	var speedOfBar = 1000;
+	barChart.select("#bar0").transition().duration(speedOfBar).attr("width", function(){return barScale(d.a);}).attr("opacity", function(){return d.a/38*2});
+	barChart.select("#bar1").transition().duration(speedOfBar).attr("width", function(){return barScale(d.b);}).attr("opacity", function(){return d.b/38*2});
+	barChart.select("#bar2").transition().duration(speedOfBar).attr("width", function(){return barScale(d.c);}).attr("opacity", function(){return d.c/38*2});
+	barChart.select("#bar3").transition().duration(speedOfBar).attr("width", function(){return barScale(d.d);}).attr("opacity", function(){return d.d/38*2});
+	barChart.select("#bar4").transition().duration(speedOfBar).attr("width", function(){return barScale(d.e);}).attr("opacity", function(){return d.e/38*2});
+	barChart.select("#bar5").transition().duration(speedOfBar).attr("width", function(){return barScale(d.f);}).attr("opacity", function(){return d.f/38*2});
+	barChart.select("#bar6").transition().duration(speedOfBar).attr("width", function(){return barScale(d.g);}).attr("opacity", function(){return d.g/38*2});
+	barChart.select("#bar7").transition().duration(speedOfBar).attr("width", function(){return barScale(d.h);}).attr("opacity", function(){return d.h/38*2});
+	barChart.select("#bar8").transition().duration(speedOfBar).attr("width", function(){return barScale(d.i);}).attr("opacity", function(){return d.i/38*2});
+	barChart.select("#bar9").transition().duration(speedOfBar).attr("width", function(){return barScale(d.j);}).attr("opacity", function(){return d.j/38*2});
+	barChart.select("#bar10").transition().duration(speedOfBar).attr("width", function(){return barScale(d.k);}).attr("opacity", function(){return d.k/38*2});
+	barChart.select("#bar11").transition().duration(speedOfBar).attr("width", function(){return barScale(d.l);}).attr("opacity", function(){return d.l/38*2});
+	barChart.select("#currentParty").text(function(){return "Übereinstimmung der "+ d.partei+" mit:";});
+	})				
+        .on("mouseout", function(d) {		
+            d3.select(this).attr("opacity",0.75);
+});
+
+
+
+
+
+var label = svg.selectAll("text")
+                    .data(nodesData)
+                    .enter()
+                    .append("text")
+					.attr("class","textLabel")
+                    .text(function (d) {return d.short;})
+                   .style("text-anchor", "middle")
+                    .style("fill", "white")
+                    //.style("font-family", "Arial")
+                    .style("font-size", 10);
+    
+	
+	
+	
+//What happens on tick of simulation
+function tickActions(){
+node.attr("cx", function(d) { return d.x;})
+        .attr("cy", function(d) { return d.y;});
+	
+
+	
+link
+	.attr("x1", function(d){return d.source.x;})
+	.attr("y1", function(d) {return d.source.y;})
+	.attr("x2", function(d){return d.target.x;})
+	.attr("y2", function(d) {return d.target.y;});
+	
+label
+	.attr("x", function(d){return d.x;})
+	.attr("y", function(d){return d.y+4;});
+
+}
+
+	
+
+
+
+	
+	
+var drag_handler = d3.drag()
+	.on("start", drag_start)
+	.on("drag", drag_drag)
+	.on("end", drag_end);
+	
+function drag_start(d) {
+simulation.alphaTarget(0.3).restart();
+  d.fx = d.x;
+  d.fy = d.y;
+}
+ 
+function drag_drag(d) {
+  d.fx = d3.event.x;
+  d.fy = d3.event.y;
+}
+ 
+function drag_end(d) {
+  simulation.alphaTarget(0);
+  d.fx = null;
+  d.fy = null;
+}
+	
+drag_handler(node);
+
+
+
+//##############################
+// DRAW KEY	
+//##############################
+
+	var keyElements = svg.append("g");
+
+
+	
+	keyElements.append("text").attr("x",10).attr("y",function(d,i){return 30}).text("Deutschlands politische Landschaft").attr("font-size","30").attr("fill", "white").attr("class","title");
+	keyElements.append("text").attr("x",10).attr("y",function(d,i){return 45}).text("Bundestagswahl 2017").attr("font-size","10").attr("fill", "white").attr("class","title");
+
+
+
+
+
+//Draw BarChart
+
+//Draw Parties
+
+
+var barChart = svg.append("g");
+
+barChart.selectAll("text").data(nodesData).enter().append("text").attr("x", 90).attr("y", function(d,i){return i*20+100;}).text(function(d){return d.partei;}).attr("fill", "white").attr("text-anchor", "end").attr("font-size", "10");
+
+
+
+
+
+barChart.selectAll("rect").data(nodesData).enter().append("rect").attr("x", 90+5).attr("y", function(d,i){return i*20+100-8.5;}).attr("fill", "white").attr("width", "0").attr("height", "10").attr("id", function(d,i){return "bar"+i;});
+//Scale:
+barChart.append("text").text("100%").attr("font-size", 8).attr("x", 90+5+barScale(38)).attr("y", function(){return 12*20+100-4;}).attr("fill", "white").attr("text-anchor", "middle");
+barChart.append("text").text("50%").attr("font-size", 8).attr("x", 90+5+barScale(38/2)).attr("y", function(){return 12*20+100-4;}).attr("fill", "white").attr("text-anchor", "middle");
+//Current Party:
+
+barChart.append("text").text("").attr("x", 10).attr("y",80).attr("fill", "white").attr("font-size", 20).attr("id", "currentParty");
+console.log("end");
+
+
+//Draw explanation
+
+var explanationText= [
+"Analyse des Antwortverhaltens der 12 größten Parteien",
+"zu den 38 Wahl-O-Mat-Thesen der BPB","",
+"Fahre mit der Maus über eine Partei für mehr Informationen"
+];
+
+var explanation = svg.append("g");
+
+explanation.selectAll("text").data(explanationText).enter().append("text").attr("fill","white").text(function(d){return d;}).attr("x",1200).attr("y",function(d,i){return 30+i*20;}).attr("font-size",12).attr("text-anchor","end");
+svg.append("text").attr("fill","white").text("Christoph Löffel, 09/17").attr("x",1200).attr("y",580).attr("font-size",10).attr("text-anchor","end");
+
+svg.append("text").attr("fill","white").text("Made with ❤ in JavaScript").attr("x",1200).attr("y",595).attr("font-size",10).attr("text-anchor","end");
+
+}
+</script>
+
+	
+</body>
+	
+
+ 
+</html>
